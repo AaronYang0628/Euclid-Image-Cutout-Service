@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euclid图像裁剪</title>
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: white;
+            color: #000000;
+            padding: 10px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            height: auto;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.9em;
+            font-weight: 500;
+            color: #000000;
+            display: inline-block;
+            vertical-align: middle;
+            height: auto;
+            line-height: normal;
+            position: static;
+        }
+        .logo {
+            max-height: 120px;
+            max-width: 120px;
+            vertical-align: middle;
+            position: relative;
+            top: 13px;
+            height: auto;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input[type="file"] {
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            padding: 8px 12px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-item input[type="checkbox"],
+        .radio-item input[type="radio"] {
+            margin-right: 6px;
+        }
+        /* .logo 样式已在上方定义 */
+        .button {
+            padding: 8px 16px;
+            background-color: #f0f0f0;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #e6f7ff;
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        .button:disabled {
+            background-color: #d9d9d9;
+            cursor: not-allowed;
+        }
+        .button.primary {
+            background-color: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        .button.primary:hover {
+            background-color: #40a9ff;
+            border-color: #40a9ff;
+        }
+        .upload-btn {
+            margin-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="file"] {
+            display: inline-block;
+            width: auto;
+            margin-right: 10px;
+        }
+        .task-list {
+            margin-top: 30px;
+        }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 4px solid #d9d9d9;
+        }
+        .task-item.queued {
+            border-left-color: #faad14;
+        }
+        .task-item.processing {
+            border-left-color: #1890ff;
+        }
+        .task-item.completed {
+            border-left-color: #52c41a;
+        }
+        .task-item.failed {
+            border-left-color: #ff4d4f;
+        }
+        .task-info {
+            flex: 1;
+        }
+        .task-actions {
+            margin-left: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.queued {
+            background-color: #fff7e6;
+            color: #fa8c16;
+        }
+        .status-badge.processing {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+        .status-badge.completed {
+            background-color: #f6ffed;
+            color: #52c41a;
+        }
+        .status-badge.failed {
+            background-color: #fff2f0;
+            color: #ff4d4f;
+        }
+        .download-button {
+            background-color: #52c41a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .download-button:hover {
+            background-color: #73d13d;
+        }
+        .status-button {
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-button:hover {
+            background-color: #40a9ff;
+        }
+        /* 删除按钮样式已移除 */
+        .error-message {
+            color: #ff4d4f;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .success-message {
+            color: #52c41a;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .progress-bar {
+            height: 6px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #1890ff;
+            transition: width 0.3s ease;
+        }
+        .info-text {
+            background-color: #e6f7ff;
+            color: #1890ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1890ff;
+        }
+        .help-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/templates/NADC_logo.png" alt="NADC Logo" class="logo">
+        <h1>Euclid图像裁剪</h1>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Euclid图像裁剪服务</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="catalogFile">选择星表文件（FITS，最大 10,000 行）<a href="/data/home/xiejh/table_explain.md" download="星表格式说明.md" style="margin-left: 10px; color: #1890ff; text-decoration: underline;">星表格式说明</a></label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="file" id="catalogFile" name="catalog" accept=".fits" required style="flex: 1;">
+                        <button type="button" class="button" id="uploadFileButton" style="background-color: #1890ff; color: white; white-space: nowrap;">上传文件</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>服务类型</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="serviceType1" name="service_type" value="euclid_cutout" checked>
+                            <label for="serviceType1">Euclid图像裁剪</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="serviceType2" name="service_type" value="legacy_convolution_cutout">
+                            <label for="serviceType2">Legacy survey数据裁剪</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="serviceType4" name="service_type" value="other_ground_instrument">
+                            <label for="serviceType4">其它地面辅助仪器数据裁剪</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+            <label for="targetIdCol">唯一索引列</label>
+            <input type="text" id="targetIdCol" name="target_id_col" value="object_id" placeholder="输入唯一索引列">
+        </div>
+                
+                <div class="form-group">
+                    <label for="raCol">赤经列名</label>
+                    <input type="text" id="raCol" name="ra_col" value="RA" placeholder="输入赤经列名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="decCol">赤纬列名</label>
+                    <input type="text" id="decCol" name="dec_col" value="DEC" placeholder="输入赤纬列名">
+                </div>
+                
+                <!-- 裁剪尺寸已设为默认值，不再让用户选择 -->
+                <input type="hidden" id="size" name="size" value="128">
+                
+                <div class="form-group">
+                    <label>文件类型</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fileTypeBGSUB" name="file_types[]" value="BGSUB" checked>
+                            <label for="fileTypeBGSUB">BGSUB</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fileTypeCATALOG-PSF" name="file_types[]" value="CATALOG-PSF" checked>
+                            <label for="fileTypeCATALOG-PSF">CATALOG-PSF</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fileTypeFLAG" name="file_types[]" value="FLAG">
+                            <label for="fileTypeFLAG">FLAG</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fileTypeBGMOD" name="file_types[]" value="BGMOD">
+                            <label for="fileTypeBGMOD">BGMOD</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fileTypeRMS" name="file_types[]" value="RMS">
+                            <label for="fileTypeRMS">RMS</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>仪器</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentVIS" name="instrument" value="VIS">
+                            <label for="instrumentVIS">VIS</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentNISP" name="instrument" value="NISP">
+                            <label for="instrumentNISP">NISP</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentDECAM" name="instrument" value="DECAM">
+                            <label for="instrumentDECAM">DECAM</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentHSC" name="instrument" value="HSC">
+                            <label for="instrumentHSC">HSC</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentGPC" name="instrument" value="GPC">
+                            <label for="instrumentGPC">GPC</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="instrumentMEGACAM" name="instrument" value="MEGACAM">
+                            <label for="instrumentMEGACAM">MEGACAM</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="bandsSection">
+                    <label>波段</label>
+                    <div class="radio-group">
+                        <!-- VIS波段 -->
+                        <div class="radio-item" data-instrument="VIS">
+                            <input type="radio" id="bandVIS" name="bands" value="VIS" checked>
+                            <label for="bandVIS">VIS</label>
+                        </div>
+                        <!-- NISP波段 -->
+                        <div class="radio-item" data-instrument="NISP">
+                            <input type="radio" id="bandNIR-Y" name="bands" value="NIR-Y">
+                            <label for="bandNIR-Y">NIR-Y</label>
+                        </div>
+                        <div class="radio-item" data-instrument="NISP">
+                            <input type="radio" id="bandNIR-J" name="bands" value="NIR-J">
+                            <label for="bandNIR-J">NIR-J</label>
+                        </div>
+                        <div class="radio-item" data-instrument="NISP">
+                            <input type="radio" id="bandNIR-H" name="bands" value="NIR-H">
+                            <label for="bandNIR-H">NIR-H</label>
+                        </div>
+                        <!-- DECAM波段 -->
+                        <div class="radio-item" data-instrument="DECAM">
+                            <input type="radio" id="bandDES-G" name="bands" value="DES-G">
+                            <label for="bandDES-G">DES-G</label>
+                        </div>
+                        <div class="radio-item" data-instrument="DECAM">
+                            <input type="radio" id="bandDES-R" name="bands" value="DES-R">
+                            <label for="bandDES-R">DES-R</label>
+                        </div>
+                        <div class="radio-item" data-instrument="DECAM">
+                            <input type="radio" id="bandDES-I" name="bands" value="DES-I">
+                            <label for="bandDES-I">DES-I</label>
+                        </div>
+                        <div class="radio-item" data-instrument="DECAM">
+                            <input type="radio" id="bandDES-Z" name="bands" value="DES-Z">
+                            <label for="bandDES-Z">DES-Z</label>
+                        </div>
+                        <!-- HSC波段选项 -->
+                        <div class="radio-item" data-instrument="HSC">
+                            <input type="radio" id="bandWISHES-G" name="bands" value="WISHES-G">
+                            <label for="bandWISHES-G">WISHES-G</label>
+                        </div>
+                        <div class="radio-item" data-instrument="HSC">
+                            <input type="radio" id="bandWISHES-Z" name="bands" value="WISHES-Z">
+                            <label for="bandWISHES-Z">WISHES-Z</label>
+                        </div>
+                        <!-- GPC波段选项 -->
+                        <div class="radio-item" data-instrument="GPC">
+                            <input type="radio" id="bandPANSTARRS-I" name="bands" value="PANSTARRS-I">
+                            <label for="bandPANSTARRS-I">PANSTARRS-I</label>
+                        </div>
+                        <!-- MEGACAM波段选项 -->
+                        <div class="radio-item" data-instrument="MEGACAM">
+                            <input type="radio" id="bandCFIS-U" name="bands" value="CFIS-U">
+                            <label for="bandCFIS-U">CFIS-U</label>
+                        </div>
+                        <div class="radio-item" data-instrument="MEGACAM">
+                            <input type="radio" id="bandCFIS-R" name="bands" value="CFIS-R">
+                            <label for="bandCFIS-R">CFIS-R</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nWorkers">并行工作数</label>
+                    <input type="number" id="nWorkers" name="n_workers" value="4" min="1" max="16" required>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button type="button" class="button primary" id="submitTaskButton" disabled>提交任务</button>
+                </div>
+                
+                <div id="message" style="margin-top: 15px;"></div>
+                
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>图像切割任务列表</h2>
+            <div id="cutoutTaskList" class="task-list">
+                <p>暂无图像切割任务</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const catalogFile = document.getElementById('catalogFile');
+            const uploadFileButton = document.getElementById('uploadFileButton');
+            const submitTaskButton = document.getElementById('submitTaskButton');
+            const message = document.getElementById('message');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            let uploadedFilename = null;
+            let uploadedTempId = null;
+            
+            console.log('绑定上传文件按钮事件');
+            if (uploadFileButton) {
+                uploadFileButton.addEventListener('click', function() {
+                    console.log('上传按钮被点击，执行handleFileUpload');
+                    handleFileUpload();
+                });
+            } else {
+                console.error('未找到上传按钮元素');
+            }
+            
+            console.log('绑定提交任务按钮事件');
+            if (submitTaskButton) {
+                submitTaskButton.addEventListener('click', function() {
+                    console.log('提交任务按钮被点击，执行handleTaskSubmit');
+                    handleTaskSubmit();
+                });
+            } else {
+                console.error('未找到提交任务按钮元素');
+            }
+            
+            // 监听文件选择
+            catalogFile.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    if (!file.name.endsWith('.fits')) {
+                        showMessage('请选择FITS格式的文件', 'error');
+                        return;
+                    }
+                    showMessage('已选择文件: ' + file.name, 'success');
+                }
+            });
+            
+            // 服务类型和仪器配置的映射
+            const serviceConfigs = {
+                'euclid_cutout': {
+                    instruments: ['VIS', 'NISP'],
+                    bands: {
+                        'VIS': ['VIS'],
+                        'NISP': ['NIR-Y', 'NIR-J', 'NIR-H']
+                    }
+                },
+                'legacy_convolution_cutout': {
+                    instruments: ['DECAM'],
+                    bands: {
+                        'DECAM': ['DES-G', 'DES-R', 'DES-I', 'DES-Z']
+                    }
+                },
+                'other_ground_instrument': {
+                    instruments: ['HSC', 'GPC', 'MEGACAM'],
+                    bands: {
+                        'HSC': ['WISHES-G', 'WISHES-Z'],
+                        'GPC': ['PANSTARRS-I'],
+                        'MEGACAM': ['CFIS-U', 'CFIS-R']
+                    }
+                }
+            };
+
+            // 更新服务类型界面
+            function updateServiceTypeInterface() {
+                const selectedServiceType = document.querySelector('input[name="service_type"]:checked').value;
+                const config = serviceConfigs[selectedServiceType];
+                
+                // 重置仪器和波段显示
+                updateInstrumentOptions(config.instruments);
+                resetBandVisibility();
+            }
+
+            // 更新仪器选项
+            function updateInstrumentOptions(instruments) {
+                // 隐藏所有仪器选项
+                document.querySelectorAll('.radio-item').forEach(item => {
+                    const radio = item.querySelector('input[type="radio"]');
+                    if (radio.name === 'instrument') {
+                        item.style.display = 'none';
+                        radio.disabled = false; // 重置禁用状态
+                        radio.checked = false; // 取消选中状态
+                    }
+                });
+                
+                // 显示选中的仪器选项
+                instruments.forEach(instrument => {
+                    const item = document.querySelector(`#instrument${instrument}`).closest('.radio-item');
+                    if (item) {
+                        item.style.display = 'block';
+                    }
+                });
+                
+                // 设置默认仪器选择
+                const selectedServiceType = document.querySelector('input[name="service_type"]:checked').value;
+                if (selectedServiceType === 'euclid_cutout') {
+                    // Euclid图像裁剪服务：设置第一个仪器为默认选中
+                    const firstInstrument = instruments[0];
+                    document.getElementById(`instrument${firstInstrument}`).checked = true;
+                }
+                
+                updateBandVisibility();
+            }
+
+            // 重置波段可见性
+    function resetBandVisibility() {
+        document.querySelectorAll('.radio-item[data-instrument]').forEach(item => {
+            item.style.display = 'none';
+            const radio = item.querySelector('input[type="radio"]');
+            radio.checked = false;
+            radio.disabled = true;
+        });
+    }
+
+            // 监听服务类型变化
+            document.querySelectorAll('input[name="service_type"]').forEach(radio => {
+                radio.addEventListener('change', updateServiceTypeInterface);
+            });
+
+            // 监听仪器选择变化，更新波段显示
+            document.querySelectorAll('input[name="instrument"]').forEach(radio => {
+                radio.addEventListener('change', updateBandVisibility);
+            });
+            
+            // 更新波段可见性函数
+    function updateBandVisibility() {
+        const selectedInstrumentRadio = document.querySelector('input[name="instrument"]:checked');
+        if (!selectedInstrumentRadio) {
+            return; // 没有选中仪器时直接返回
+        }
+        
+        const selectedInstrument = selectedInstrumentRadio.value;
+        const selectedServiceType = document.querySelector('input[name="service_type"]:checked').value;
+        
+        // 获取当前仪器的所有波段项
+        const instrumentBandItems = document.querySelectorAll('.radio-item[data-instrument]');
+        const visibleBandItems = [];
+        
+        instrumentBandItems.forEach(item => {
+            const instrument = item.getAttribute('data-instrument');
+            const radio = item.querySelector('input[type="radio"]');
+            
+            if (instrument === selectedInstrument) {
+                item.style.display = 'block';
+                radio.disabled = false;
+                visibleBandItems.push(radio);
+            } else {
+                item.style.display = 'none';
+                radio.checked = false;
+                radio.disabled = true;
+            }
+        });
+        
+        // 确保至少有一个波段被选中
+        const anyChecked = visibleBandItems.some(radio => radio.checked);
+        if (!anyChecked && visibleBandItems.length > 0) {
+            visibleBandItems[0].checked = true;
+        }
+    }
+            
+            // 初始化波段显示
+            updateBandVisibility();
+            
+            // 处理文件上传
+            function handleFileUpload() {
+                const file = catalogFile.files[0];
+                if (!file) {
+                    showMessage('请先选择文件', 'error');
+                    return;
+                }
+                
+                if (!file.name.endsWith('.fits')) {
+                    showMessage('只支持FITS格式的文件', 'error');
+                    return;
+                }
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('catalog', file);
+                
+                // 更新UI状态
+                uploadFileButton.disabled = true;
+                uploadFileButton.textContent = '上传中...';
+                progressBar.style.display = 'block';
+                progressFill.style.width = '0%';
+                showMessage('正在上传文件...');
+                
+                // 发送文件上传请求
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/upload_file', true);
+                
+                // 监听上传进度
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressFill.style.width = percentComplete + '%';
+                    }
+                });
+                
+                // 监听请求完成
+                xhr.addEventListener('load', function() {
+                    uploadFileButton.disabled = false;
+                    uploadFileButton.textContent = '上传文件';
+                    progressBar.style.display = 'none';
+                    
+                    if (xhr.status === 200) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success && data.temp_id) {
+                                uploadedFilename = data.filename;
+                                uploadedTempId = data.temp_id; // 保存临时ID
+                                console.log('文件上传成功，临时ID:', uploadedTempId);
+                                showMessage('文件上传成功: ' + data.filename, 'success');
+                                submitTaskButton.disabled = false;
+                            } else {
+                                showMessage('上传失败: ' + (data.error || '未返回有效的临时ID'), 'error');
+                                uploadedTempId = null;
+                            }
+                        } catch (e) {
+                            console.error('解析上传响应失败:', e);
+                            showMessage('上传失败: 服务器响应格式错误', 'error');
+                            uploadedTempId = null;
+                        }
+                    } else {
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            showMessage('上传失败: ' + errorData.error, 'error');
+                        } catch {
+                            showMessage('上传失败: 服务器错误 (状态码: ' + xhr.status + ')', 'error');
+                        }
+                        uploadedTempId = null;
+                    }
+                });
+                
+                // 监听请求错误
+                xhr.addEventListener('error', function() {
+                    uploadFileButton.disabled = false;
+                    uploadFileButton.textContent = '上传文件';
+                    progressBar.style.display = 'none';
+                    showMessage('上传失败: 网络错误', 'error');
+                });
+                
+                // 发送请求
+                xhr.send(formData);
+            }
+            
+            // 任务提交处理函数
+            function handleTaskSubmit() {
+                if (!uploadedTempId) {
+                    showMessage('请先上传文件', 'error');
+                    return;
+                }
+                
+                // 检查是否已选择服务类型
+                const selectedServiceTypeRadio = document.querySelector('input[name="service_type"]:checked');
+                if (!selectedServiceTypeRadio) {
+                    showMessage('请选择服务类型', 'error');
+                    return;
+                }
+                
+                const selectedServiceType = selectedServiceTypeRadio.value;
+                
+                // 获取选中的仪器 - 改为instruments[]
+                const selectedInstruments = [];
+                document.querySelectorAll('input[name="instrument"]:checked').forEach(radio => {
+                    selectedInstruments.push(radio.value);
+                });
+                
+                if (selectedInstruments.length === 0) {
+                    showMessage('请选择仪器类型', 'error');
+                    return;
+                }
+                
+                // 获取选中的波段
+                const selectedBand = document.querySelector('input[name="bands"]:checked');
+                if (!selectedBand) {
+                    showMessage('请选择波段', 'error');
+                    return;
+                }
+                const selectedBands = [selectedBand.value];
+                
+                // 获取选中的文件类型
+                const selectedFileTypes = [];
+                document.querySelectorAll('input[name="file_types[]"]:checked').forEach(checkbox => {
+                    selectedFileTypes.push(checkbox.value);
+                });
+                
+                if (selectedFileTypes.length === 0) {
+                    showMessage('请选择文件类型', 'error');
+                    return;
+                }
+                
+                // 构建FormData
+                const formData = new FormData();
+                formData.append('filename', uploadedFilename || '');
+                formData.append('temp_id', uploadedTempId);
+                formData.append('target_id_col', document.getElementById('targetIdCol').value);
+                formData.append('ra_col', document.getElementById('raCol').value);
+                formData.append('dec_col', document.getElementById('decCol').value);
+                formData.append('size', document.getElementById('size').value);
+                formData.append('n_workers', document.getElementById('nWorkers').value);
+                
+                // 添加仪器
+                selectedInstruments.forEach(instrument => {
+                    formData.append('instruments[]', instrument);
+                });
+                
+                // 添加波段
+                selectedBands.forEach(band => {
+                    formData.append('bands[]', band);
+                });
+                
+                // 添加文件类型
+                selectedFileTypes.forEach(type => {
+                    formData.append('file_types[]', type);
+                });
+                
+                // 更新UI状态
+                submitTaskButton.disabled = true;
+                submitTaskButton.textContent = '提交中...';
+                progressBar.style.display = 'block';
+                progressFill.style.width = '0%';
+                showMessage('正在提交任务...');
+                
+                // 发送任务提交请求
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/submit_task', true);
+                
+                // 监听请求完成
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.task_id) {
+                            showMessage('任务已成功提交，任务ID: ' + data.task_id, 'success');
+                            // 重置表单状态
+                            catalogFile.value = '';
+                            uploadedFilename = null;
+                            uploadedTempId = null;
+                            submitTaskButton.disabled = true;
+                            submitTaskButton.textContent = '提交任务';
+                            progressBar.style.display = 'none';
+                            // 刷新任务列表
+                            loadTasks();
+                        } else {
+                            showMessage('任务创建失败: ' + data.error, 'error');
+                            submitTaskButton.disabled = false;
+                            submitTaskButton.textContent = '提交任务';
+                            progressBar.style.display = 'none';
+                        }
+                    } else {
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            showMessage('任务提交失败: ' + errorData.error, 'error');
+                        } catch {
+                            showMessage('任务提交失败: 服务器错误', 'error');
+                        }
+                        submitTaskButton.disabled = false;
+                        submitTaskButton.textContent = '提交任务';
+                        progressBar.style.display = 'none';
+                    }
+                });
+                
+                // 监听请求错误
+                xhr.addEventListener('error', function() {
+                    showMessage('任务提交失败: 网络错误', 'error');
+                    submitTaskButton.disabled = false;
+                    submitTaskButton.textContent = '提交任务';
+                    progressBar.style.display = 'none';
+                });
+                
+                // 发送请求
+                xhr.send(formData);
+            }
+            
+            // 加载图像切割任务列表
+            function loadCutoutTasks() {
+                fetch('/api/tasks')
+                    .then(response => response.json())
+                    .then(data => {
+                        const cutoutTaskList = document.getElementById('cutoutTaskList');
+                        // 过滤图像切割任务（排除lrgb服务）
+                        const cutoutTasks = data.filter(task => {
+                            const serviceType = task.config?.service_type;
+                            return serviceType !== 'lrgb'; // 排除LRGB图像生成任务
+                        });
+                        
+                        if (cutoutTasks.length === 0) {
+                            cutoutTaskList.innerHTML = '<p>暂无图像切割任务</p>';
+                        } else {
+                            cutoutTaskList.innerHTML = cutoutTasks.map(task => `
+                                <div class="task-item ${task.status}">
+                                    <div class="task-info">
+                                        <div><strong>${task.filename}</strong></div>
+                                        <div>创建时间: ${formatDate(task.created_at)}</div>
+                                        <span class="status-badge ${task.status}">${getStatusText(task.status)}</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <a href="/api/task/${task.id}" class="status-button" target="_blank">查看状态</a>
+                                        ${task.status === 'completed' ? `<a href="/api/download/${task.id}" class="download-button">下载结果</a>` : ''}
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载图像切割任务列表失败:', error);
+                    });
+            }
+
+            // 加载所有任务列表
+            function loadTasks() {
+                loadCutoutTasks();
+            }
+            
+            // 删除任务功能已移除，服务重启时会自动清空任务列表
+            
+            // 格式化日期
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleString();
+            }
+            
+            // 获取状态文本
+            function getStatusText(status) {
+                const statusMap = {
+                    'queued': '排队中',
+                    'processing': '处理中',
+                    'completed': '已完成',
+                    'failed': '失败'
+                };
+                return statusMap[status] || status;
+            }
+            
+            // 显示消息
+            function showMessage(text, type = 'info') {
+                message.textContent = text;
+                message.className = type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : '';
+            }
+            
+            // 初始化波段显示
+            updateBandVisibility();
+            
+            // 初始化界面
+            updateServiceTypeInterface();
+            
+            // 初始加载任务列表
+            loadTasks();
+            
+            // 每30秒自动刷新任务列表
+            setInterval(loadTasks, 30000);
+        });
+    </script>
+</body>
+</html>
