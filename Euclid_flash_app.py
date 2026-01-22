@@ -686,6 +686,9 @@ def process_task(task_id: str, catalog_path: str, config: Dict[str, Any]) -> Non
         task_output_dir = os.path.join(TMP_DIR, task_id)
         os.makedirs(task_output_dir, exist_ok=True)
         
+        for file_type in config["file_types"]:
+            os.makedirs(os.path.join(task_output_dir, file_type), exist_ok=True)
+
         # 统计信息
         stats = {
             'total_sources': len(catalog),
@@ -856,6 +859,9 @@ def process_task(task_id: str, catalog_path: str, config: Dict[str, Any]) -> Non
             # 创建临时处理目录
             temp_process_dir = os.path.join(TMP_DIR, f"temp_process_{task_id}")
             os.makedirs(temp_process_dir, exist_ok=True)
+
+            for file_type in config["file_types"]:
+                os.makedirs(os.path.join(temp_process_dir, file_type), exist_ok=True)
             
             # 创建临时星表，只包含需要处理的源
             processed_indices = list(set([s['index'] for s in sources_to_process]))
@@ -873,7 +879,7 @@ def process_task(task_id: str, catalog_path: str, config: Dict[str, Any]) -> Non
                 dec_col=config['dec_col'],
                 size=config['size'],
                 obj_id_col=target_id_col,  # 传递TARGETID列名，可能为None
-                mer_root='/data/astrodata/mirror/102042-Euclid-Q1/MER',  # 确保路径正确
+                mer_root= DATA_ROOT / 'MER',  # 确保路径正确
                 instruments=config['instruments'],
                 bands=[config.get('band', 'VIS')],  # 适配单选模式
                 skip_nan=True,
