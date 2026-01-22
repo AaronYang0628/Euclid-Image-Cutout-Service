@@ -79,7 +79,7 @@ def setup_logging():
 logger = setup_logging()
 
 # ================== Configuration ==================
-DATA_ROOT = Path("/data/astrodata/mirror/102042-Euclid-Q1")
+DATA_ROOT = Path("/media/aaron/DATA/astro+euclid/mirror/euclid_q1_102042")
 CATALOG_DIR = DATA_ROOT / "catalogs"
 IMAGE_DIRS = [DATA_ROOT / "VIS", DATA_ROOT / "NIR", DATA_ROOT / "MER"]
 
@@ -90,12 +90,12 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 目录配置
-UPLOAD_DIR = '/data/home/xiejh/app_data/'  # 用户指定的上传目录
+UPLOAD_DIR = '/home/aaron/tmp'  # 用户指定的上传目录
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'outputs')
 CACHE_DIR = os.path.join(os.path.dirname(__file__), 'cache')
 TMP_DIR = os.path.join(os.path.dirname(__file__), 'tmp')
 # 新增持久化存储目录
-PERMANENT_DOWNLOAD_DIR = '/data/home/xiejh/Euclid_download/'  # 持久化下载目录
+PERMANENT_DOWNLOAD_DIR = '/home/aaron/tmp/Euclid_download/'  # 持久化下载目录
 MAX_CATALOG_ROWS = 10000  # 最大星表行数
 
 # 确保所有目录存在
@@ -1580,125 +1580,6 @@ class EuclidCatalogDataset(Dataset):
         if self.transform: img = self.transform(img)
         return img, label
 
-# ================== Model & Training ==================
-def build_model(num_classes):
-    model = models.resnet18(pretrained=True)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    return model
-
-def plot_curves(train_loss, val_loss, train_acc, val_acc, path):
-    plt.figure(figsize=(10,4))
-    plt.subplot(1,2,1)
-    plt.plot(train_loss, label="train_loss"); plt.plot(val_loss, label="val_loss"); plt.legend()
-    plt.subplot(1,2,2)
-    plt.plot(train_acc, label="train_acc"); plt.plot(val_acc, label="val_acc"); plt.legend()
-    plt.tight_layout(); plt.savefig(path); plt.close()
-
-def train_model(epochs=5, batch_size=16, lr=1e-4, img_size=224):
-    STATE["training"] = True
-    STATE["message"] = "Reading catalog..."
-    try:
-        df = read_catalog()
-        transform = transforms.Compose([
-            transforms.Resize((img_size, img_size)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.5]*3, [0.5]*3)
-        ])
-        dataset = EuclidCatalogDataset(df, IMAGE_DIRS, transform)
-        n = len(dataset)
-        idx = np.arange(n)
-        np.random.shuffle(idx)
-        split = int(0.8 * n)
-        train_idx, val_idx = idx[:split], idx[split:]
-        train_loader = DataLoader(torch.utils.data.Subset(dataset, train_idx), batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(torch.utils.data.Subset(dataset, val_idx), batch_size=batch_size, shuffle=False)
-
-        model = build_model(len(dataset.classes)).to(DEVICE)
-        opt = optim.Adam(model.parameters(), lr=lr)
-        criterion = nn.CrossEntropyLoss()
-
-        train_loss, val_loss, train_acc, val_acc = [], [], [], []
-        best_acc = 0
-        for epoch in range(1, epochs+1):
-            model.train()
-            tloss, tcorrect, ttotal = 0, 0, 0
-            for imgs, labels in train_loader:
-                imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
-                opt.zero_grad()
-                out = model(imgs)
-                loss = criterion(out, labels)
-                loss.backward(); opt.step()
-                tloss += loss.item() * imgs.size(0)
-                tcorrect += (out.argmax(1) == labels).sum().item()
-                ttotal += labels.size(0)
-            train_loss.append(tloss / ttotal); train_acc.append(tcorrect / ttotal)
-
-            model.eval()
-            vloss, vcorrect, vtotal = 0, 0, 0
-            with torch.no_grad():
-                for imgs, labels in val_loader:
-                    imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
-                    out = model(imgs)
-                    loss = criterion(out, labels)
-                    vloss += loss.item() * imgs.size(0)
-                    vcorrect += (out.argmax(1) == labels).sum().item()
-                    vtotal += labels.size(0)
-            val_loss.append(vloss / vtotal); val_acc.append(vcorrect / vtotal)
-            STATE["message"] = f"Epoch {epoch}/{epochs} acc={val_acc[-1]:.3f}"
-            logger.info(STATE["message"])
-            if val_acc[-1] > best_acc:
-                best_acc = val_acc[-1]
-                torch.save({
-                    "model": model.state_dict(),
-                    "classes": dataset.classes,
-                    "img_size": img_size
-                }, MODEL_DIR / "best_model.pth")
-
-        plot_path = FIG_DIR / f"train_{int(time.time())}.png"
-        plot_curves(train_loss, val_loss, train_acc, val_acc, plot_path)
-        STATE.update({
-            "training": False,
-            "message": f"Training finished, acc={best_acc:.3f}",
-            "last_train_time": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "model_path": str(MODEL_DIR / 'best_model.pth')
-        })
-        return {"status": "done", "best_acc": best_acc, "curve": plot_path.name}
-    except Exception as e:
-        STATE["training"] = False
-        STATE["message"] = f"Training failed: {e}"
-        logger.error(f"训练失败: {e}")
-        return {"error": str(e)}
-
-# ================== Prediction ==================
-GLOBAL_MODEL = {"net": None, "classes": None, "img_size": 224}
-
-def load_model():
-    path = MODEL_DIR / "best_model.pth"
-    ckpt = torch.load(path, map_location=DEVICE)
-    model = build_model(len(ckpt["classes"]))
-    model.load_state_dict(ckpt["model"])
-    model.to(DEVICE).eval()
-    GLOBAL_MODEL.update({"net": model, "classes": ckpt["classes"], "img_size": ckpt["img_size"]})
-    return True
-
-def predict(path: Path):
-    if GLOBAL_MODEL["net"] is None:
-        load_model()
-    img = fits_to_pil(path)
-    transform = transforms.Compose([
-        transforms.Resize((GLOBAL_MODEL["img_size"], GLOBAL_MODEL["img_size"])),
-        transforms.ToTensor(), transforms.Normalize([0.5]*3, [0.5]*3)
-    ])
-    x = transform(img).unsqueeze(0).to(DEVICE)
-    with torch.no_grad():
-        out = GLOBAL_MODEL["net"](x)
-        prob = torch.softmax(out, 1)[0].cpu().numpy()
-    top = np.argsort(prob)[::-1][:3]
-    res = [{"class": GLOBAL_MODEL["classes"][i], "score": float(prob[i])} for i in top]
-    buf = io.BytesIO(); img.resize((256, 256)).save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-    return {"predictions": res, "image_base64": b64}
-
 # ================== Flask API Routes ==================
 @app.route('/')
 def index():
@@ -1985,33 +1866,6 @@ def list_tasks():
         result.append(task_data)
     
     return jsonify(result)
-
-# 删除任务功能已移除，服务重启时自动清空任务列表
-
-@app.route("/train", methods=["POST"])
-def api_train():
-    if STATE["training"]:
-        return jsonify({"error": "Training already in progress"}), 400
-    p = request.get_json(silent=True) or {}
-    Thread(target=train_model, args=(
-        int(p.get("epochs", 5)),
-        int(p.get("batch_size", 16)),
-        float(p.get("lr", 1e-4)),
-        int(p.get("img_size", 224))
-    ), daemon=True).start()
-    return jsonify({"status": "started"})
-
-@app.route("/predict", methods=["POST"])
-def api_predict():
-    p = request.get_json(force=True)
-    path = Path(p["path"])
-    if not path.exists():
-        return jsonify({"error": "File not found"}), 400
-    return jsonify(predict(path))
-
-@app.route("/status")
-def api_status():
-    return jsonify(STATE)
 
 @app.route("/health")
 def api_health():
