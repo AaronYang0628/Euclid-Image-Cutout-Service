@@ -2,3 +2,8 @@ venv/*
 temp/*
 outputs/*
 __pycache__/*
+
+*.pyc
+euclid_service/legacy/outputs/*
+
+euclid_service/legacy/cache/*

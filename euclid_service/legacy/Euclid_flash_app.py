@@ -26,7 +26,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 import zipfile
 # 导入euclid_cutout模块中的函数
-from euclid_cutout_remix import process_catalog, query_tile_id
+from euclid_service.core.euclid_cutout_remix import process_catalog, query_tile_id
 import uuid
 from datetime import datetime
 
@@ -130,7 +130,7 @@ def serve_template_file(filename):
     return send_from_directory(app.template_folder, filename)
 
 # 导入裁剪功能
-from euclid_cutout_remix import process_catalog
+from euclid_service.core.euclid_cutout_remix import process_catalog
 
 # 统一的文件命名和波段处理函数
 def build_unified_filename(target_id, file_type, instrument, band, ra=None, dec=None):
