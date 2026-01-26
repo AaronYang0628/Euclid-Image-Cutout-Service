@@ -14,7 +14,7 @@ from astropy.table import Table
 from euclid_service.core.euclid_cutout_remix import process_catalog
 
 # 测试参数
-catalog_path = "/home/aaron/tmp/test_catalog.fits"  # 你的测试文件路径
+catalog_path = "/media/aaron/AARON/Euclid-Image-Cutout-Service/data/EuclidQ1_MER_catalog.fits"  # 你的测试文件路径
 output_dir = "/tmp/test_output"
 tile_index_file = str(Path(__file__).parent / 'data' / 'EuclidQ1_tile_coordinates.fits')
 mer_root = "/media/aaron/DATA/astro+euclid/mirror/euclid_q1_102042/MER"

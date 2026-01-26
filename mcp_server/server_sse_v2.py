@@ -23,6 +23,12 @@ import mcp.types as types
 # 导入工具处理函数
 from mcp_server.tools.query_tools import handle_query_tile_id, handle_batch_query_tile_ids
 from mcp_server.tools.catalog_tools import handle_get_catalog_info, handle_validate_catalog
+from mcp_server.tools.cutout_tools import (
+    handle_cutout_single,
+    handle_cutout_batch,
+    handle_get_cutout_status,
+    handle_list_cutout_tasks
+)
 
 # 配置日志
 logging.basicConfig(
@@ -131,6 +137,142 @@ TOOLS = [
             },
             "required": ["catalog_path"]
         }
+    ),
+    Tool(
+        name="cutout_single",
+        description="对单个天体坐标进行 Euclid 图像裁剪，支持多仪器、多波段、多文件类型",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "ra": {
+                    "type": "number",
+                    "description": "赤经（度），范围 0-360"
+                },
+                "dec": {
+                    "type": "number",
+                    "description": "赤纬（度），范围 -90 到 90"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "裁剪尺寸（像素），默认 128",
+                    "default": 128
+                },
+                "instruments": {
+                    "type": "array",
+                    "description": "仪器列表，可选: VIS, NISP, DECAM 等，默认 ['VIS']",
+                    "items": {"type": "string"},
+                    "default": ["VIS"]
+                },
+                "file_types": {
+                    "type": "array",
+                    "description": "文件类型列表，可选: SCI(科学图像), WHT(权重图), RMS(噪声图), CATALOG-PSF(PSF星表)，默认 ['SCI', 'WHT']",
+                    "items": {"type": "string"},
+                    "default": ["SCI", "WHT"]
+                },
+                "bands": {
+                    "type": "array",
+                    "description": "波段列表（可选），如 ['NIR-Y', 'DES-G']",
+                    "items": {"type": "string"}
+                },
+                "output_dir": {
+                    "type": "string",
+                    "description": "输出目录（可选，默认自动生成）"
+                },
+                "obj_id": {
+                    "type": "string",
+                    "description": "对象ID（可选，默认使用坐标生成）"
+                }
+            },
+            "required": ["ra", "dec"]
+        }
+    ),
+    Tool(
+        name="cutout_batch",
+        description="批量裁剪 Euclid 图像，从星表文件读取坐标列表，创建异步处理任务",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "catalog_path": {
+                    "type": "string",
+                    "description": "星表文件路径（FITS 或 CSV 格式）"
+                },
+                "ra_col": {
+                    "type": "string",
+                    "description": "RA 列名，默认 'RA'",
+                    "default": "RA"
+                },
+                "dec_col": {
+                    "type": "string",
+                    "description": "DEC 列名，默认 'DEC'",
+                    "default": "DEC"
+                },
+                "obj_id_col": {
+                    "type": "string",
+                    "description": "对象ID列名（可选）"
+                },
+                "size": {
+                    "type": "integer",
+                    "description": "裁剪尺寸（像素），默认 128",
+                    "default": 128
+                },
+                "instruments": {
+                    "type": "array",
+                    "description": "仪器列表，默认 ['VIS']",
+                    "items": {"type": "string"},
+                    "default": ["VIS"]
+                },
+                "file_types": {
+                    "type": "array",
+                    "description": "文件类型列表，默认 ['SCI', 'WHT']",
+                    "items": {"type": "string"},
+                    "default": ["SCI", "WHT"]
+                },
+                "bands": {
+                    "type": "array",
+                    "description": "波段列表（可选）",
+                    "items": {"type": "string"}
+                },
+                "n_workers": {
+                    "type": "integer",
+                    "description": "并行工作进程数，默认 4，最大 16",
+                    "default": 4
+                },
+                "max_rows": {
+                    "type": "integer",
+                    "description": "最大处理行数，默认 10000",
+                    "default": 10000
+                }
+            },
+            "required": ["catalog_path"]
+        }
+    ),
+    Tool(
+        name="get_cutout_status",
+        description="查询批量裁剪任务的状态和进度",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "task_id": {
+                    "type": "string",
+                    "description": "任务ID（由 cutout_batch 返回）"
+                }
+            },
+            "required": ["task_id"]
+        }
+    ),
+    Tool(
+        name="list_cutout_tasks",
+        description="列出所有裁剪任务及其状态",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "status_filter": {
+                    "type": "string",
+                    "description": "状态过滤（可选），可选值: pending, processing, completed, failed",
+                    "enum": ["pending", "processing", "completed", "failed"]
+                }
+            }
+        }
     )
 ]
 
@@ -139,7 +281,11 @@ TOOL_HANDLERS = {
     "query_tile_id": handle_query_tile_id,
     "batch_query_tile_ids": handle_batch_query_tile_ids,
     "get_catalog_info": handle_get_catalog_info,
-    "validate_catalog": handle_validate_catalog
+    "validate_catalog": handle_validate_catalog,
+    "cutout_single": handle_cutout_single,
+    "cutout_batch": handle_cutout_batch,
+    "get_cutout_status": handle_get_cutout_status,
+    "list_cutout_tasks": handle_list_cutout_tasks
 }
 
 # 存储每个会话的消息队列

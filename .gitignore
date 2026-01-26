@@ -7,3 +7,4 @@ __pycache__/*
 euclid_service/legacy/outputs/*
 
 euclid_service/legacy/cache/*
+tmp/*
