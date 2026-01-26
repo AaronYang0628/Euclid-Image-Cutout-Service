@@ -4,7 +4,6 @@
 任务处理器 - 封装任务创建和处理逻辑
 """
 
-import os
 import uuid
 import threading
 import logging
@@ -12,10 +11,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any
 
-# 导入原始的 process_task 函数（暂时从 legacy 模块导入）
-# 后续可以重构这个函数
-from euclid_service.legacy.Euclid_flash_app import process_task as _original_process_task
-
+from euclid_service.core.task_executor import TaskExecutor
 from euclid_service.config import get_config
 
 logger = logging.getLogger(__name__)
@@ -37,11 +33,6 @@ class TaskProcessor:
         """
         self.tasks = tasks_dict
         self.tasks_lock = tasks_lock
-
-        # 设置全局变量供 process_task 使用
-        from euclid_service.legacy import Euclid_flash_app
-        Euclid_flash_app.tasks = self.tasks
-        Euclid_flash_app.tasks_lock = self.tasks_lock
 
     def create_task(self, catalog_path: str, task_config: Dict[str, Any]) -> str:
         """
@@ -69,9 +60,16 @@ class TaskProcessor:
             }
 
         # 在后台线程中处理任务
+        executor = TaskExecutor(
+            task_id=task_id,
+            catalog_path=catalog_path,
+            task_config=task_config,
+            tasks_dict=self.tasks,
+            tasks_lock=self.tasks_lock
+        )
+
         thread = threading.Thread(
-            target=_original_process_task,
-            args=(task_id, catalog_path, task_config),
+            target=executor.execute,
             daemon=True
         )
         thread.start()
