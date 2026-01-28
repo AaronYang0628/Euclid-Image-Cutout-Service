@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmo:*)",
+      "Bash(env)",
+      "Bash(echo:*)",
+      "Bash(source ~/.bashrc)"
+    ]
+  }
+}
