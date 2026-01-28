@@ -5,16 +5,18 @@ metadata:
   labels:
     app: euclid-cutout-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: euclid-cutout-service
   ports:
   - name: flask
     port: 5000
     targetPort: 5000
+    nodePort: 30500
     protocol: TCP
   - name: mcp-sse
     port: 8000
     targetPort: 8000
+    nodePort: 30800
     protocol: TCP
   sessionAffinity: None

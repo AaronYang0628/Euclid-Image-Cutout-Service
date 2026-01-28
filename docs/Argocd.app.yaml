@@ -1,0 +1,22 @@
+kubectl -n argocd apply -f - <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: euclid-cutout-service
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/AaronYang0628/Euclid-Image-Cutout-Service.git'
+    targetRevision: main
+    path: manifests
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: application
+EOF
