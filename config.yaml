@@ -2,7 +2,7 @@
 
 # 数据路径配置
 data:
-  root: "/media/aaron/DATA/astro+euclid/mirror/euclid_q1_102042"
+  root: "/data/euclid"
   catalog_dir: "${data.root}/catalogs"
   mer_root: "${data.root}/MER"
   image_dirs:
@@ -12,11 +12,11 @@ data:
 
 # 工作目录配置
 workspace:
-  upload_dir: "/home/aaron/tmp"
+  upload_dir: "/tmp/euclid_upload"
   output_dir: "./outputs"
   cache_dir: "./cache"
   tmp_dir: "./tmp"
-  permanent_download_dir: "/home/aaron/tmp/Euclid_download/"
+  permanent_download_dir: "/tmp/euclid_download/"
 
 # 处理限制
 limits:

@@ -130,7 +130,9 @@ def list_tasks():
                 'status': task['status'],
                 'created_at': task.get('created_at'),
                 'progress': task.get('progress', 0),
-                'message': task.get('message', '')
+                'message': task.get('message', ''),
+                'filename': task.get('config', {}).get('original_filename', task_id),
+                'config': task.get('config', {})
             }
 
             # 添加统计信息

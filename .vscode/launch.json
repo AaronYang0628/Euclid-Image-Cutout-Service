@@ -1,0 +1,55 @@
+# VS Code 启动配置
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flask: 调试模式",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_flask.py",
+      "console": "integratedTerminal",
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "MCP: 调试模式",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_mcp_sse.py",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "Python: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Python: 测试",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-v",
+        "${file}"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": false
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+# VS Code 任务配置
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "启动 Flask 应用",
+      "type": "shell",
+      "command": "python",
+      "args": ["run_flask.py"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "启动 MCP 服务",
+      "type": "shell",
+      "command": "python",
+      "args": ["run_mcp_sse.py"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "启动所有服务",
+      "type": "shell",
+      "command": "./start.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "运行测试",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["-v"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "代码格式化",
+      "type": "shell",
+      "command": "black",
+      "args": ["."],
+      "problemMatcher": []
+    },
+    {
+      "label": "代码检查",
+      "type": "shell",
+      "command": "flake8",
+      "args": ["."],
+      "problemMatcher": []
+    },
+    {
+      "label": "清理缓存",
+      "type": "shell",
+      "command": "rm",
+      "args": ["-rf", "cache/*", "tmp/*", "outputs/*", "__pycache__", "**/__pycache__"],
+      "problemMatcher": []
+    }
+  ]
+}

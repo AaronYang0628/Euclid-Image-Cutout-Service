@@ -1,0 +1,101 @@
+{
+  "name": "Euclid Image Cutout Service",
+  "dockerFile": "Dockerfile",
+  "context": "..",
+  // 容器配置
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  // 端口转发
+  "forwardPorts": [
+    5000,
+    8000
+  ],
+  "portsAttributes": {
+    "5000": {
+      "label": "Flask App",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "MCP SSE Server",
+      "onAutoForward": "notify"
+    }
+  },
+  // 容器运行选项
+  "runArgs": [
+    "--name=euclid-dev",
+    // 如果需要 GPU 支持，取消下面的注释
+    // "--gpus=all",
+    // 挂载数据目录（根据实际情况调整）
+    // 如果有 Euclid 数据，挂载数据目录
+    "-v",
+    "/media/aaron/DATA/astro+euclid/mirror/euclid_q1_102042:/data/euclid"
+  ],
+  // 环境变量
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONPATH": "/workspace",
+    "FLASK_ENV": "development",
+    "FLASK_DEBUG": "1"
+  },
+  // 容器创建后执行的命令
+  "postCreateCommand": "pip install -r requirements.txt && npm install -g @anthropic-ai/claude-code && mkdir -p /workspace/outputs /workspace/cache /workspace/tmp /workspace/data",
+  // VS Code 扩展
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.isort",
+        "ms-toolsai.jupyter",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "GitHub.copilot"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": [
+          "--line-length",
+          "100"
+        ],
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "**/.pytest_cache": true,
+          "**/outputs": true,
+          "**/cache": true,
+          "**/tmp": true
+        },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  // 容器用户
+  "remoteUser": "root",
+  // 生命周期脚本
+  "postStartCommand": "echo '🚀 Euclid Image Cutout Service Dev Container Ready!' && echo '📡 Flask: http://localhost:5000' && echo '📡 MCP: http://localhost:8000'",
+  // 功能特性
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": false
+    }
+  },
+  // 挂载点
+  "mounts": [
+    "source=${localWorkspaceFolder}/.git,target=/workspace/.git,type=bind,consistency=cached"
+  ]
+}
