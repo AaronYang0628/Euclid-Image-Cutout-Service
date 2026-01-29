@@ -332,16 +332,38 @@
 
 <body>
     <div class="header">
-        <img src="/templates/NADC_logo.png" alt="NADC Logo" class="logo">
+        <img src="/templates/NADCLogo.png" alt="NADC Logo" class="logo">
         <h1>Euclid图像裁剪</h1>
     </div>
 
     <div class="container">
         <div class="card">
+            <div class="info-text">
+                <h3 style="margin-top: 0;">快速测试指南</h3>
+                <p><strong>示例星表文件下载：</strong></p>
+                <p>您可以通过以下链接下载示例星表文件进行功能测试：</p>
+                <p><a href="https://irsa.ipac.caltech.edu/ibe/data/euclid/q1/catalogs/MER_FINAL_CATALOG/102018211/EUC_MER_FINAL-CAT_TILE102018211-CC66F6_20241018T214045.289017Z_00.00.fits"
+                        target="_blank" style="color: #1890ff; text-decoration: underline; word-break: break-all;">
+                        https://irsa.ipac.caltech.edu/ibe/data/euclid/q1/catalogs/MER_FINAL_CATALOG/102018211/EUC_MER_FINAL-CAT_TILE102018211-CC66F6_20241018T214045.289017Z_00.00.fits
+                    </a></p>
+                <p><strong>测试步骤：</strong></p>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li>下载上述示例星表文件（FITS格式）</li>
+                    <li>上传该文件到本服务</li>
+                    <li>选择服务类型：<strong>Euclid图像裁剪</strong></li>
+                    <li>参数保持默认值即可（唯一索引列：OBJECT_ID，赤经列：RIGHT_ASCENSION，赤纬列：DECLINATION）</li>
+                    <li>文件类型：<strong>✅BGSUB ✅CATALOG-PSF</strong></li>
+                    <li>选择波段：<strong>VIS</strong></li>
+                    <li>点击"提交任务"即可开始测试</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
             <h2>Euclid图像裁剪服务</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="catalogFile">选择星表文件（FITS，最大 10,000 行）<a href="/data/home/xiejh/table_explain.md"
+                    <label for="catalogFile">选择星表文件（FITS，最大 10,000 行）<a href="/templates/table_explain.md"
                             download="星表格式说明.md"
                             style="margin-left: 10px; color: #1890ff; text-decoration: underline;">星表格式说明</a></label>
                     <div style="display: flex; align-items: center; gap: 10px;">
